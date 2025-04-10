@@ -247,12 +247,31 @@
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'F12' ||
-          (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+          (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) ||
           (e.ctrlKey && e.key === 'u') ||
-          (e.ctrlKey && e.shiftKey && e.key === 'J')) {
+          (e.metaKey && e.altKey && e.key.toLowerCase() === 'i')) {
         e.preventDefault();
+        return false;
       }
     });
+
+    setInterval(function () {
+      const before = new Date().getTime();
+      debugger;
+      const after = new Date().getTime();
+      if (after - before > 100) {
+        window.location.replace("https://google.com");
+      }
+    }, 1000);
+
+    console.log = () => {
+      console.clear();
+      console.log("🔒 This site is protected.");
+    };
   </script>
 </body>
 </html>
+
+
+
+
