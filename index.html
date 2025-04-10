@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeetCode Solution Fetcher</title>
+  <style>
+    :root {
+      --bg-light: #f9f9f9;
+      --text-light: #333;
+      --bg-dark: #121212;
+      --text-dark: #f9f9f9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-dark);
+    }
+
+    .container {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      text-align: center;
+      width: 95%;
+      max-width: 1000px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: var(--text-dark);
+    }
+
+    select,
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #555;
+      border-radius: 10px;
+      outline: none;
+      margin-bottom: 15px;
+      background: #1e1e1e;
+      color: white;
+      transition: 0.3s;
+    }
+
+    input[type="text"]:focus,
+    select:focus {
+      border-color: #2575fc;
+    }
+
+    button {
+      background-color: #2575fc;
+      color: white;
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #1a5edb;
+    }
+
+    #result {
+      margin-top: 20px;
+      text-align: left;
+      max-height: 600px;
+      overflow-y: auto;
+      overflow-x: auto;
+      background: #1e1e1e;
+      color: #f9f9f9;
+      padding: 15px;
+      border-radius: 10px;
+      white-space: pre;
+      font-family: 'Fira Code', Consolas, monospace;
+      font-size: 16px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      color: white;
+      font-size: 14px;
+      text-align: center;
+      padding: 10px;
+    }
+
+    .footer a {
+      color: #ffd700;
+      text-decoration: none;
+      display: inline-block;
+      animation: jump 1s infinite;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @keyframes jump {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    @media screen and (max-width: 600px) {
+      .container {
+        padding: 20px;
+        width: 100%;
+      }
+
+      button, select, input[type="text"] {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      #result {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>LeetCode Solution Fetcher</h1>
+    <input type="text" id="questionInput" placeholder="Write question name e.g. Add Two Numbers" />
+    <br>
+    <select id="language">
+      <option value="C++">C++</option>
+      <option value="Python">Python</option>
+      <option value="Java">Java</option>
+    </select>
+    <br>
+    <select id="theme">
+      <option value="dark">Dark PDF</option>
+      <option value="light">Light PDF</option>
+    </select>
+    <br>
+    <button onclick="fetchCode()">Find Solution</button>
+    <button onclick="downloadPDF()">Download as PDF</button>
+    <div id="result"></div>
+  </div>
+
+  <div class="footer">
+    Made with ❤️ by  <a href="https://www.linkedin.com/in/sachin-kumar-048975288/" target="_blank"> SACHIN</a>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+  <script>
+    let currentCode = '';
+    let currentFilename = '';
+
+    function toKebabCase(str) {
+      return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+
+    async function fetchCode() {
+      const questionRaw = document.getElementById("questionInput").value.trim();
+      const language = document.getElementById("language").value;
+      const question = toKebabCase(questionRaw);
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "Loading...";
+
+      let ext = ".cpp";
+      let langPath = "C++";
+      let langClass = "cpp";
+
+      if (language === "Python") {
+        ext = ".py";
+        langPath = "Python";
+        langClass = "python";
+      } else if (language === "Java") {
+        ext = ".java";
+        langPath = "Java";
+        langClass = "java";
+      }
+
+      const url = `https://raw.githubusercontent.com/kamyu104/LeetCode-Solutions/master/${langPath}/${question}${ext}`;
+      currentFilename = `${question}${ext}`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          resultDiv.innerHTML = `❌ Could not find the ${language} solution for '<b>${questionRaw}</b>'.`;
+          currentCode = '';
+        } else {
+          const code = await response.text();
+          resultDiv.innerHTML = `<pre><code class="language-${langClass}">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+          hljs.highlightAll();
+          currentCode = code;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `⚠️ Error fetching code: ${error}`;
+        currentCode = '';
+      }
+    }
+
+    function downloadPDF() {
+      if (!currentCode) {
+        alert("Please fetch a solution first before downloading PDF.");
+        return;
+      }
+      const theme = document.getElementById("theme").value;
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      if (theme === 'dark') {
+        doc.setFillColor(40, 44, 52);
+        doc.rect(0, 0, 210, 297, 'F');
+        doc.setTextColor(255, 255, 255);
+      } else {
+        doc.setFillColor(255, 255, 255);
+        doc.rect(0, 0, 210, 297, 'F');
+        doc.setTextColor(0, 0, 0);
+      }
+
+      doc.setFont("Courier", "normal");
+      const lines = doc.splitTextToSize(currentCode, 180);
+      doc.text(lines, 10, 10);
+      doc.save(currentFilename.replace(/\.[^.]+$/, '.pdf'));
+    }
+
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'F12' ||
+          (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+          (e.ctrlKey && e.key === 'u') ||
+          (e.ctrlKey && e.shiftKey && e.key === 'J')) {
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>
